@@ -11,7 +11,8 @@ import { useState, useEffect } from "react";
 import { useHistory, Route, Switch } from "react-router-dom";
 import { format } from "date-fns";
 import api from "./api/posts";
-import EditPost from './Component/EditPost'
+import EditPost from "./Component/EditPost";
+import useWindowSize from "./hooks/useWindowSize";
 
 function App() {
   const [posts, setPosts] = useState([]);
@@ -22,6 +23,7 @@ function App() {
   const history = useHistory();
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const { width } = useWindowSize();
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -33,16 +35,14 @@ function App() {
           console.log(err.response.data);
           console.log(err.response.status);
           console.log(err.response.headers);
-        }
-        else{
-          console.log(`Error:${err.message}`)
+        } else {
+          console.log(`Error:${err.message}`);
         }
       }
-    }
+    };
     fetchPosts();
   }, []);
 
-  
   useEffect(() => {
     const filteredResults = posts.filter(
       (post) =>
@@ -57,47 +57,48 @@ function App() {
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1;
     const datetime = format(new Date(), "MMMM dd,yyyy pp");
     const newPost = { id, title: postTitle, datetime, body: postBody };
-    try{
-      const response= await api.post('/posts',newPost);
+    try {
+      const response = await api.post("/posts", newPost);
       const allPosts = [...posts, response.data];
       setPosts(allPosts);
-      setPostTitle('');
-      setPostBody('');
-      history.push('/');
-    }catch(err){
-      console.log(`Error:${err.message}`);
-    } 
-  }
-
-  const handleEdit=async(id)=>{
-    const datetime=format(new Date(),'MMMM dd,yyyy pp');
-    const updatedPost={id,title:editTitle,datetime,body:editBody};
-    try{
-      const response=await api.put(`/post/${id}`,updatedPost)
-      setPosts(posts.map(post=>post.id===id ? {...response.data} : post));
-      setEditTitle('');
-      setEditBody('');
-      history.push('/');
-    }catch(err){
-      console.log(`Error: ${err.message}`);
-    }
-  }
-
-  const handleDelete =  async(id) => {
-    try{
-      await api.delete(`/posts/${id}`);
-      const postsList = posts.filter((post) => post.id !== id);
-      setPosts(postsList);
+      setPostTitle("");
+      setPostBody("");
       history.push("/");
-    }catch(err){
+    } catch (err) {
+      console.log(`Error:${err.message}`);
+    }
+  };
+
+  const handleEdit = async (id) => {
+    const datetime = format(new Date(), "MMMM dd,yyyy pp");
+    const updatedPost = { id, title: editTitle, datetime, body: editBody };
+    try {
+      const response = await api.put(`/post/${id}`, updatedPost);
+      setPosts(
+        posts.map((post) => (post.id === id ? { ...response.data } : post))
+      );
+      setEditTitle("");
+      setEditBody("");
+      history.push("/");
+    } catch (err) {
       console.log(`Error: ${err.message}`);
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/posts/${id}`);
+      const postsList = posts.filter((post) => post.id !== id);
+      setPosts(postsList);
+      history.push("/");
+    } catch (err) {
+      console.log(`Error: ${err.message}`);
+    }
+  };
 
   return (
     <div className="App">
-      <Header title="React JS Blog Website" />
+      <Header title="React JS Blog Website" width={width} />
       <NavBar search={search} setSearch={setSearch} />
       <Switch>
         <Route exact path="/">
